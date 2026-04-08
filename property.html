@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Property Details</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<style>
+body{font-family:Arial; background:#f5f5f5; padding:20px;}
+.container{max-width:900px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+.main-img{width:100%; aspect-ratio:4/5; object-fit:cover;}
+.thumbnails{display:flex; gap:5px; margin-top:10px;}
+.thumbnails img{width:80px; height:100px; object-fit:cover; cursor:pointer; border:2px solid transparent; border-radius:5px;}
+.thumbnails img.active{border-color:#007bff;}
+h2{margin-top:10px; color:#007bff;}
+.actions a{margin-right:5px; text-decoration:none; padding:5px 8px; border-radius:5px; font-size:14px; color:white;}
+.actions a.whatsapp{background:#25D366;}
+.actions a.map{background:#6c757d;}
+.actions a.quote{background:#ff6600;}
+.actions a.quote:hover{background:#e65c00;}
+</style>
+</head>
+<body>
+
+<div class="container" id="propertyDetails">Loading...</div>
+
+<script>
+// Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDaB6-reBh0HnHfExefki4J04b9ZOu_eGk",
+    authDomain: "trusted-dealz.firebaseapp.com",
+    projectId: "trusted-dealz",
+    storageBucket: "trusted-dealz.firebasestorage.app",
+    messagingSenderId: "890053361790",
+    appId: "1:890053361790:web:76471149c9aa95633b182f"
+  };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ===== Get Property ID from URL =====
+const urlParams = new URLSearchParams(window.location.search);
+const id = urlParams.get('id');
+
+db.collection("properties").doc(id).get().then(doc=>{
+  if(!doc.exists){document.getElementById("propertyDetails").innerHTML="Property not found"; return;}
+  const p = doc.data();
+  const images = p.images ? p.images.split(',').map(url=>url.trim()) : ["https://via.placeholder.com/400x500"];
+
+  let html = `
+    <img class="main-img" id="mainImg" src="${images[0]}">
+    <div class="thumbnails">
+      ${images.map((img,idx)=>`<img src="${img}" class="thumb ${idx===0?'active':''}">`).join('')}
+    </div>
+    <h2>${p.title}</h2>
+    <p><b>Size:</b> ${p.size}</p>
+    <p><b>Demand:</b> ${p.demand}</p>
+    <p><b>Monthly Rent:</b> ${p.rent||'N/A'}</p>
+    <p><b>Transfer From:</b> ${p.transfer||'N/A'}</p>
+    <p><b>Cell:</b> ${p.contact}</p>
+    <div class="actions">
+      <a class="whatsapp" href="https://wa.me/${p.contact.replace(/\D/g,'')}?text=I am interested in your project kindly arrange a call" target="_blank">WhatsApp</a>
+      <a class="quote" onclick="leadCapture('${id}')">Get Quote</a>
+      <a class="map" href="${p.location}" target="_blank">View Map</a>
+    </div>
+  `;
+  document.getElementById("propertyDetails").innerHTML = html;
+
+  const mainImg = document.getElementById("mainImg");
+  document.querySelectorAll(".thumb").forEach(thumb=>{
+    thumb.addEventListener('click', ()=>{
+      mainImg.src = thumb.src;
+      document.querySelectorAll(".thumb").forEach(t=>t.classList.remove('active'));
+      thumb.classList.add('active');
+    });
+  });
+});
+
+// ===== Lead Capture Function =====
+function leadCapture(propertyId){
+  const name = prompt("Enter your Name:");
+  const phone = prompt("Enter your Phone Number:");
+  const city = prompt("Enter your City:");
+  if(name && phone && city){
+    db.collection("leads").add({
+      propertyId, name, phone, city, timestamp: new Date()
+    }).then(()=>alert("Lead submitted successfully!"));
+  }
+}
+</script>
+
+</body>
+</html>
