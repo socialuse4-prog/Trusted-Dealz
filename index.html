@@ -122,6 +122,7 @@ db.collection("properties").onSnapshot(snapshot=>{
         <p><b>Demand:</b> ${p.demand}</p>
         <p><b>Monthly Rent:</b> ${p.rent || 'N/A'}</p>
         <p><b>Transfer:</b> ${p.transfer || 'N/A'}</p>
+        <p><b>Description:</b> ${p.description || 'N/A'}</p>
         <div class="actions">
           <a class="whatsapp" href="https://wa.me/${p.contact.replace(/\D/g,'')}?text=I am interested in your project kindly arrange a call" target="_blank">WhatsApp</a>
           <a class="quote" onclick="leadCapture('${doc.id}')">Get Quote</a>
